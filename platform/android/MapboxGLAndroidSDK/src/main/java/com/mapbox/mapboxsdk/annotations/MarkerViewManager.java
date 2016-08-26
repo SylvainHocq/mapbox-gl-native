@@ -6,7 +6,9 @@ import android.graphics.RectF;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -420,20 +422,24 @@ public class MarkerViewManager {
                                 }
                             }
 
-                            adaptedView.setOnClickListener(new View.OnClickListener() {
-                                @Override
-                                public void onClick(final View v) {
-                                    boolean clickHandled = false;
-                                    if (onMarkerViewClickListener != null) {
-                                        clickHandled = onMarkerViewClickListener.onMarkerClick(marker, v, adapter);
-                                    }
+//                            adaptedView.setOnClickListener(new View.OnClickListener() {
+//                                @Override
+//                                public void onClick(final View v) {
+//                                    boolean clickHandled = false;
+//                                    if (onMarkerViewClickListener != null) {
+//                                        clickHandled = onMarkerViewClickListener.onMarkerClick(marker, v, adapter);
+//                                    }
+//
+//                                    if (!clickHandled) {
+//                                        ensureInfoWindowOffset(marker);
+//                                        select(marker, v, adapter);
+//                                    }
+//                                }
+//                            });
+                            final SingleTapGestureListener touchListener = new SingleTapGestureListener(marker, adaptedView, adapter);
 
-                                    if (!clickHandled) {
-                                        ensureInfoWindowOffset(marker);
-                                        select(marker, v, adapter);
-                                    }
-                                }
-                            });
+                            adaptedView.setOnTouchListener(touchListener);
+
 
                             markerViewMap.put(marker, adaptedView);
                             if (convertView == null) {
@@ -516,6 +522,48 @@ public class MarkerViewManager {
 
         private static class ViewHolder {
             ImageView imageView;
+        }
+    }
+
+    private class SingleTapGestureListener implements View.OnTouchListener {
+        private Marker marker;
+        private View v;
+        private MapboxMap.MarkerViewAdapter adapter;
+        private boolean stateReset = true;
+
+
+        public SingleTapGestureListener(Marker marker, View v, MapboxMap.MarkerViewAdapter adapter) {
+            this.marker = marker;
+            this.v = v;
+            this.adapter = adapter;
+        }
+//        onMarkerViewClickListener.onMarkerClick(marker, v, adapter);
+
+
+        public void reset() {
+            this.stateReset = true;
+        }
+
+        public void begin() {
+            stateReset=false;
+        }
+
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            Log.i("TOUCH", "action:" + motionEvent.getAction());
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    break;
+                case MotionEvent.ACTION_UP:
+                    reset();
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    break;
+                case MotionEvent.ACTION_CANCEL:
+                    break;
+                default:
+            }
+            return true;
         }
     }
 }

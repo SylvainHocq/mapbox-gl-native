@@ -77,6 +77,7 @@ import com.mapbox.mapboxsdk.constants.MyLocationTracking;
 import com.mapbox.mapboxsdk.constants.Style;
 import com.mapbox.mapboxsdk.exceptions.IconBitmapChangedException;
 import com.mapbox.mapboxsdk.geometry.LatLng;
+import com.mapbox.mapboxsdk.gesture.GesturesCatcher;
 import com.mapbox.mapboxsdk.location.LocationListener;
 import com.mapbox.mapboxsdk.location.LocationServices;
 import com.mapbox.mapboxsdk.maps.widgets.CompassView;
@@ -158,6 +159,7 @@ public class MapView extends FrameLayout {
 
     private List<OnMapReadyCallback> mOnMapReadyCallbackList;
     private SnapshotRequest mSnapshotRequest;
+    private GesturesCatcher gesturesCatcher;
 
     @UiThread
     public MapView(@NonNull Context context) {
@@ -1592,7 +1594,27 @@ public class MapView extends FrameLayout {
         if ((event.getButtonState() != 0) && (event.getButtonState() != MotionEvent.BUTTON_PRIMARY)) {
             return false;
         }
+        Boolean x = manageMotionEvent(event);
+        if (x != null) return x;
 
+
+        boolean retVal = mGestureDetector.onTouchEvent(event);
+        return retVal || super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        return gesturesCatcher.isEventCatched(ev);
+    }
+
+    public boolean onDispatchTouchEvent(MotionEvent event) {
+        Boolean x = manageMotionEvent(event);
+        if (x != null) return x;
+        else return false;
+    }
+
+    @Nullable
+    private Boolean manageMotionEvent(@NonNull MotionEvent event) {
         // Check two finger gestures first
         mRotateGestureDetector.onTouchEvent(event);
         mScaleGestureDetector.onTouchEvent(event);
@@ -1653,9 +1675,7 @@ public class MapView extends FrameLayout {
                 mNativeMapView.setGestureInProgress(false);
                 break;
         }
-
-        boolean retVal = mGestureDetector.onTouchEvent(event);
-        return retVal || super.onTouchEvent(event);
+        return null;
     }
 
     // This class handles one finger gestures
